@@ -440,9 +440,9 @@ pandas==2.2.3
 - [ ] Добавление real-time обработки
 
 ### 7.3 Контакты
-- **Email:** dir109@yandex.ru
-- **GitHub:** https://github.com/rustamnova/web3_2025
-- **Документация:** https://github.com/rustamnova/web3_2025
+- **Email:** → dir109@yandex.ru
+- **GitHub:** → https://github.com/rustamnova/web3_2025
+- **Навигация по документации:** → [DOCUMENTATION_INDEX.md](./DOCUMENTATION_INDEX.md)
 
 ---
 
