@@ -440,9 +440,9 @@ pandas==2.2.3
 - [ ] Добавление real-time обработки
 
 ### 7.3 Контакты
-- **Email:** support@navimind.ru
-- **GitHub:** https://github.com/your-org/navimind
-- **Документация:** https://docs.navimind.ru
+- **Email:** dir109@yandex.ru
+- **GitHub:** https://github.com/rustamnova/web3_2025
+- **Документация:** https://github.com/rustamnova/web3_2025
 
 ---
 
