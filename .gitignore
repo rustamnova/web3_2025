@@ -39,3 +39,8 @@ htmlcov/
 # Project
 /.dist/
 /.build/
+
+###
+env.example
+.github
+docker-compose.yml.bak
