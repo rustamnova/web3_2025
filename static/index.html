@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NaviMind - Тестирование API</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <div class="logo-icon">🏦</div>
+                <div class="logo-text">ГАЗПРОМБАНК</div>
+            </div>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <div class="nav-item active" onclick="showTab('parse')">
+                <div class="nav-icon">📊</div>
+                <div class="nav-text">Парсинг</div>
+            </div>
+            <div class="nav-item" onclick="showTab('upload')">
+                <div class="nav-icon">📁</div>
+                <div class="nav-text">Загрузка файлов</div>
+            </div>
+            <div class="nav-item" onclick="showTab('dataset')">
+                <div class="nav-icon">🗄️</div>
+                <div class="nav-text">База данных</div>
+            </div>
+            <div class="nav-item" onclick="showTab('dashboard')">
+                <div class="nav-icon">📈</div>
+                <div class="nav-text">Аналитика</div>
+            </div>
+            <div class="nav-item" onclick="showTab('health')">
+                <div class="nav-icon">🔧</div>
+                <div class="nav-text">Health Check</div>
+            </div>
+            <div class="nav-item" onclick="showTab('topics')">
+                <div class="nav-icon">🏷️</div>
+                <div class="nav-text">Темы</div>
+            </div>
+            <div class="nav-item" onclick="showTab('predict')">
+                <div class="nav-icon">🔮</div>
+                <div class="nav-text">Предсказания</div>
+            </div>
+            <div class="nav-item" onclick="showTab('feedback')">
+                <div class="nav-icon">💬</div>
+                <div class="nav-text">Обратная связь</div>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <header class="main-header">
+            <h1>🧠 NaviMind API Tester</h1>
+            <p>Сервис анализа отзывов по темам и тональности</p>
+        </header>
+
+        <!-- Parse Tab -->
+        <div id="parse" class="tab-content active">
+            <div class="card">
+                <h2>🏦 Парсинг отзывов ГазпромБанка</h2>
+                <div class="form-group">
+                    <label for="parse-count">Количество отзывов для парсинга:</label>
+                    <input type="number" id="parse-count" value="20" min="1" max="100">
+                </div>
+                <div class="form-group">
+                    <label for="parse-pages">Количество страниц:</label>
+                    <input type="number" id="parse-pages" value="2" min="1" max="5">
+                </div>
+                <div class="button-group">
+                    <button onclick="parseReviews()" class="btn btn-primary">Только парсинг</button>
+                    <button onclick="parseAndAnalyze()" class="btn btn-success">Парсинг + Анализ</button>
+                </div>
+                <div id="parse-result" class="result"></div>
+            </div>
+            
+        </div>
+
+        <!-- Upload Tab -->
+        <div id="upload" class="tab-content">
+            <div class="card">
+                <h2>📁 Загрузка файлов с отзывами</h2>
+                <div class="form-group">
+                    <label for="file-upload">Выберите файл с отзывами:</label>
+                    <input type="file" id="file-upload" accept=".json,.csv,.txt">
+                    <small class="help-text">Поддерживаются форматы: JSON, CSV, TXT</small>
+                </div>
+                <div class="form-group">
+                    <label>Пример формата JSON:</label>
+                    <pre class="code-example">[
+  {
+    "id": "1",
+    "source": "bankiru",
+    "url": "https://example.com/review/1",
+    "created_at": "2024-01-15 10:30:00",
+    "author": "Иван",
+    "text": "Отличное приложение, очень удобное",
+    "rating": 5.0,
+    "product_hint": "Мобильное приложение",
+    "lang": "ru",
+    "text_hash": "abc123"
+  }
+]</pre>
+                </div>
+                <div class="form-group">
+                    <label>Пример формата CSV (bankiru_clean.csv / sravniru_clean.csv):</label>
+                    <pre class="code-example">review_id,source,url,published_at,scraped_at,rating,text,content_fp
+5506e6f04800c3d7563cc4658e1c0821,banki.ru,https://www.banki.ru/services/responses/bank/response/12337844/,2025-05-31 23:58:22+00:00,2025-09-29 23:51:40.036515+00:00,5,"Отличное приложение, очень удобное",daab216049843f1dcdbd1cfbe4f039bc
+433f4a845930ee2e1ca67e55376728db,sravni.ru,,2025-05-28 13:16:44.511638+00:00,2025-09-30 22:44:38.978284+00:00,,"Ужасный банк, масса неудобств",0b015d6bd45a734eb1fc1e0dc6d32bdc</pre>
+                </div>
+                <div class="form-group">
+                    <label>Пример формата TXT:</label>
+                    <pre class="code-example">Отличное приложение, очень удобное
+Плохой сервис в отделении
+Быстро оформили карту</pre>
+                </div>
+                <div class="button-group">
+                    <button onclick="uploadAndAnalyze()" class="btn btn-success">Загрузить и проанализировать</button>
+                </div>
+                <div id="upload-result" class="result"></div>
+            </div>
+        </div>
+
+        <!-- Topics Tab -->
+        <div id="topics" class="tab-content">
+            <div class="card">
+                <h2>📋 Реестр тем</h2>
+                <button onclick="loadTopics()" class="btn btn-primary">Загрузить темы</button>
+                <div id="topics-result" class="result"></div>
+            </div>
+        </div>
+
+        <!-- Predict Tab -->
+        <div id="predict" class="tab-content">
+            <div class="card">
+                <h2>🔮 Анализ отзывов</h2>
+                <div class="form-group">
+                    <label for="review-text">Введите отзывы (по одному на строку):</label>
+                    <textarea id="review-text" rows="6" placeholder="Приложение часто зависает, но поддержка помогла&#10;Отличный сервис, быстро оформили карту"></textarea>
+                </div>
+                <button onclick="predictReviews()" class="btn btn-primary">Анализировать</button>
+                <div id="predict-result" class="result"></div>
+            </div>
+        </div>
+
+        <!-- Dataset Analysis Tab -->
+        <div id="dataset" class="tab-content">
+            <!-- Dataset Dashboard - показывается сверху -->
+            <div id="dataset-dashboard" class="dataset-dashboard" style="display: none;">
+                <div class="dashboard-header">
+                    <div class="dashboard-title">
+                        <h3>📈 Dataset Overview</h3>
+                        <button onclick="hideDatasetDashboard()" class="btn-close" title="Скрыть дашборд">×</button>
+                    </div>
+                    <div class="dashboard-stats">
+                        <div class="stat-card">
+                            <div class="stat-number" id="total-reviews">-</div>
+                            <div class="stat-label">Всего отзывов</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="total-topics">-</div>
+                            <div class="stat-label">Уникальных тем</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="avg-sentiment">-</div>
+                            <div class="stat-label">Средняя тональность</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="date-range">-</div>
+                            <div class="stat-label">Период данных</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="dashboard-content">
+                    <div class="dashboard-grid">
+                        <div class="dashboard-section">
+                            <h4>📁 Файлы Dataset</h4>
+                            <div id="files-overview" class="files-grid"></div>
+                        </div>
+                        
+                        <div class="dashboard-section">
+                            <h4>📊 Распределение по источникам</h4>
+                            <div id="sources-chart" class="chart-container"></div>
+                        </div>
+                        
+                        <div class="dashboard-section">
+                            <h4>🏷️ Топ-10 тем</h4>
+                            <div id="topics-chart" class="chart-container"></div>
+                        </div>
+                        
+                        <div class="dashboard-section">
+                            <h4>😊 Распределение тональности</h4>
+                            <div id="sentiment-chart" class="chart-container"></div>
+                        </div>
+                        
+                        <div class="dashboard-section">
+                            <h4>📅 Помесячная динамика</h4>
+                            <div id="monthly-chart" class="chart-container"></div>
+                        </div>
+                        
+                        <div class="dashboard-section">
+                            <h4>📈 Ключевые метрики</h4>
+                            <div id="key-metrics" class="metrics-grid"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>📊 Анализ Dataset</h2>
+                <p>Анализ всех файлов в папке dataset</p>
+                
+                <div class="form-group">
+                    <button onclick="analyzeDataset()" class="btn btn-primary">Проанализировать все файлы</button>
+                    <button onclick="showDatasetDashboard()" class="btn btn-secondary">Показать на дашборде</button>
+                </div>
+                
+                <div id="dataset-result" class="result" style="display: none;"></div>
+                    <div class="dashboard-header">
+                        <h3>📈 Dataset Overview</h3>
+                        <div class="dashboard-stats">
+                            <div class="stat-card">
+                                <div class="stat-number" id="total-reviews">-</div>
+                                <div class="stat-label">Всего отзывов</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="total-topics">-</div>
+                                <div class="stat-label">Уникальных тем</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="avg-sentiment">-</div>
+                                <div class="stat-label">Средняя тональность</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="date-range">-</div>
+                                <div class="stat-label">Период данных</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="dashboard-content">
+                        <div class="dashboard-section">
+                            <h4>📁 Файлы Dataset</h4>
+                            <div id="files-overview" class="files-grid"></div>
+                        </div>
+                        
+                        <div class="dashboard-section">
+                            <h4>📊 Распределение по источникам</h4>
+                            <div id="sources-chart" class="chart-container"></div>
+                        </div>
+                        
+                        <div class="dashboard-section">
+                            <h4>🏷️ Топ-10 тем</h4>
+                            <div id="topics-chart" class="chart-container"></div>
+                        </div>
+                        
+                        <div class="dashboard-section">
+                            <h4>😊 Распределение тональности</h4>
+                            <div id="sentiment-chart" class="chart-container"></div>
+                        </div>
+                        
+                        <div class="dashboard-section">
+                            <h4>📅 Помесячная динамика</h4>
+                            <div id="monthly-chart" class="chart-container"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Tab -->
+        <div id="dashboard" class="tab-content">
+            <div class="dashboard">
+                <div class="dashboard-section banki">
+                    <div class="dashboard-header">
+                        <div class="site-icon banki">Б</div>
+                        <h3>Banki.ru</h3>
+                    </div>
+                    <div class="stats-grid" id="banki-stats">
+                        <!-- Stats will be populated by JavaScript -->
+                    </div>
+                    <div class="sentiment-chart" id="banki-sentiment">
+                        <!-- Sentiment chart will be populated by JavaScript -->
+                    </div>
+                    <div class="topics-cloud" id="banki-topics">
+                        <!-- Topics will be populated by JavaScript -->
+                    </div>
+                    <div id="banki-reviews">
+                        <!-- Reviews will be populated by JavaScript -->
+                    </div>
+                </div>
+                
+                <div class="dashboard-section sravni">
+                    <div class="dashboard-header">
+                        <div class="site-icon sravni">С</div>
+                        <h3>Сравни.ру</h3>
+                    </div>
+                    <div class="stats-grid" id="sravni-stats">
+                        <!-- Stats will be populated by JavaScript -->
+                    </div>
+                    <div class="sentiment-chart" id="sravni-sentiment">
+                        <!-- Sentiment chart will be populated by JavaScript -->
+                    </div>
+                    <div class="topics-cloud" id="sravni-topics">
+                        <!-- Topics will be populated by JavaScript -->
+                    </div>
+                    <div id="sravni-reviews">
+                        <!-- Reviews will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <div class="dashboard-section uploaded">
+                    <div class="dashboard-header">
+                        <div class="site-icon uploaded">📁</div>
+                        <h3>Загруженные файлы</h3>
+                    </div>
+                    <div class="stats-grid" id="uploaded-stats">
+                        <!-- Stats will be populated by JavaScript -->
+                    </div>
+                    <div class="sentiment-chart" id="uploaded-sentiment">
+                        <!-- Sentiment chart will be populated by JavaScript -->
+                    </div>
+                    <div class="topics-cloud" id="uploaded-topics">
+                        <!-- Topics will be populated by JavaScript -->
+                    </div>
+                    <div id="uploaded-reviews">
+                        <!-- Reviews will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Health Check Tab -->
+        <div id="health" class="tab-content">
+            <div class="card">
+                <h2>🔍 Проверка состояния сервиса</h2>
+                <button onclick="checkHealth()" class="btn btn-primary">Проверить статус</button>
+                <div id="health-result" class="result"></div>
+            </div>
+        </div>
+
+        <!-- Feedback Tab -->
+        <div id="feedback" class="tab-content">
+            <div class="card">
+                <h2>💬 Обратная связь</h2>
+                <div class="form-group">
+                    <label for="feedback-id">ID отзыва:</label>
+                    <input type="number" id="feedback-id" value="1">
+                </div>
+                <div class="form-group">
+                    <label for="feedback-topics">Темы (через запятую):</label>
+                    <input type="text" id="feedback-topics" placeholder="Мобильное приложение, Обслуживание в отделении">
+                </div>
+                <div class="form-group">
+                    <label for="feedback-sentiments">Тональности (через запятую):</label>
+                    <input type="text" id="feedback-sentiments" placeholder="отрицательно, положительно">
+                </div>
+                <div class="form-group">
+                    <label for="feedback-comment">Комментарий:</label>
+                    <textarea id="feedback-comment" rows="3" placeholder="Правильная разметка"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="feedback-correct" checked> Предсказание корректно
+                    </label>
+                </div>
+                <button onclick="sendFeedback()" class="btn btn-primary">Отправить обратную связь</button>
+                <div id="feedback-result" class="result"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>

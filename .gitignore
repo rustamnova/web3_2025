@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.cache/
+
+# Environments
+.env
+.env.*
+.venv/
+venv/
+ENV/
+
+# IDE / Editors
+.vscode/
+.idea/
+*.code-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+Logs/*.log
+Logs/*.txt
+
+# Coverage
+htmlcov/
+.coverage*
+
+# Docker
+*.pid
+.docker/
+
+# Project
+/.dist/
+/.build/

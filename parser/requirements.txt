@@ -1,0 +1,6 @@
+httpx[http2]==0.27.2
+h2==4.3.0
+beautifulsoup4==4.12.3
+lxml>=5.0.0
+python-dateutil==2.9.0.post0
+tqdm==4.66.4
