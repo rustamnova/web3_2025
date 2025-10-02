@@ -330,10 +330,12 @@ Response: {
 ### Конфигурация
 
 #### 4.4 Переменные окружения
+на dev стенде необходимо создать файл "env.example":
 ```bash
 # Основные настройки
-APP_ENV=dev                    # Окружение (dev/prod)
-BATCH_LIMIT=50000             # Лимит обработки за раз
+PORT=8080
+APP_ENV=dev                   # Окружение (dev/prod)
+BATCH_LIMIT=250               # Лимит обработки за раз
 PREDICT_TIMEOUT_SEC=180       # Таймаут предсказания
 
 # Базы данных
@@ -344,6 +346,7 @@ REDIS_DSN=redis://redis:6379/0
 # Внешние сервисы
 RABBITMQ_DSN=amqp://guest:guest@rabbitmq
 CORS_ORIGINS=*
+TELEGRAM_BOT_TOKEN=
 ```
 
 ### Мониторинг и логирование
