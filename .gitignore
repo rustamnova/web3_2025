@@ -41,6 +41,6 @@ htmlcov/
 /.build/
 
 ###
-env.example
 .github
 docker-compose.yml.bak
+docker-compose.yml.broken.*
