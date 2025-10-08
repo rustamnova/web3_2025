@@ -404,6 +404,131 @@ async def upload_and_analyze(file: UploadFile = File(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Ошибка обработки файла: {str(e)}")
 
+# --- ANALYZE DATASET: разрешаем и GET, и POST
+@app.get("/analyze-dataset")
+@app.post("/analyze-dataset")
+async def analyze_dataset():
+    """Детальный анализ файлов из папки dataset (GET/POST). Никогда не падает 404."""
+    try:
+        from pathlib import Path
+        import pandas as pd
+
+        dataset_path = Path("dataset")
+
+        # Если папка не найдена — отдаём пустую, но валидную структуру
+        if not dataset_path.exists():
+            return {
+                "status": "empty",
+                "files_found": 0,
+                "total_files_checked": 0,
+                "summary_stats": {
+                    "total_reviews": 0,
+                    "total_topics": 0,
+                    "date_range": {},
+                    "sources": {},
+                    "sentiment_distribution": {}
+                },
+                "results": {},
+                "message": "Папка dataset не найдена внутри контейнера (/app/dataset)"
+            }
+
+        results = {}
+        summary_stats = {
+            "total_reviews": 0,
+            "total_topics": 0,
+            "date_range": {},
+            "sources": {},
+            "sentiment_distribution": {}
+        }
+
+        # Основной файл
+        main_file = dataset_path / "reviews_combined_dedup.csv"
+        if main_file.exists():
+            try:
+                df_main = pd.read_csv(main_file, encoding="utf-8")
+                summary_stats["total_reviews"] = len(df_main)
+
+                if "source" in df_main.columns:
+                    summary_stats["sources"] = df_main["source"].value_counts().to_dict()
+
+                if "published_at" in df_main.columns:
+                    df_main["published_at"] = pd.to_datetime(df_main["published_at"], errors="coerce")
+                    rng = df_main["published_at"].dropna()
+                    if not rng.empty:
+                        summary_stats["date_range"] = {
+                            "start": rng.min().isoformat(),
+                            "end": rng.max().isoformat(),
+                            "months": int(rng.dt.to_period("M").nunique())
+                        }
+
+                results["reviews_combined_dedup.csv"] = {
+                    "exists": True,
+                    "size_mb": round(main_file.stat().st_size / (1024 * 1024), 2),
+                    "rows": len(df_main),
+                    "columns": list(df_main.columns)
+                }
+            except Exception as e:
+                results["reviews_combined_dedup.csv"] = {
+                    "exists": True,
+                    "size_mb": round(main_file.stat().st_size / (1024 * 1024), 2),
+                    "error": str(e)
+                }
+        else:
+            results["reviews_combined_dedup.csv"] = {"exists": False}
+
+        # Темы / тональность
+        topics_file = dataset_path / "topics_overview.csv"
+        if topics_file.exists():
+            try:
+                df_topics = pd.read_csv(topics_file, encoding="utf-8")
+                summary_stats["total_topics"] = len(df_topics)
+
+                for col in ("pos_share_%", "neu_share_%", "neg_share_%"):
+                    if col in df_topics.columns:
+                        df_topics[col] = pd.to_numeric(df_topics[col], errors="coerce")
+
+                summary_stats["sentiment_distribution"] = {
+                    "positive": float(df_topics.get("pos_share_%", pd.Series()).mean(skipna=True) or 0),
+                    "neutral":  float(df_topics.get("neu_share_%", pd.Series()).mean(skipna=True) or 0),
+                    "negative": float(df_topics.get("neg_share_%", pd.Series()).mean(skipna=True) or 0),
+                }
+
+                results["topics_overview.csv"] = {
+                    "exists": True,
+                    "size_mb": round(topics_file.stat().st_size / (1024 * 1024), 2),
+                    "topics_count": len(df_topics),
+                    "avg_positive": round(summary_stats["sentiment_distribution"]["positive"], 1),
+                    "avg_negative": round(summary_stats["sentiment_distribution"]["negative"], 1)
+                }
+            except Exception as e:
+                results["topics_overview.csv"] = {
+                    "exists": True,
+                    "size_mb": round(topics_file.stat().st_size / (1024 * 1024), 2),
+                    "error": str(e)
+                }
+        else:
+            results["topics_overview.csv"] = {"exists": False}
+
+        # Остальные файлы наличия
+        for name in ["review_topics.csv", "topic_monthly.csv", "global_monthly.csv", "topic_regexes.json"]:
+            p = dataset_path / name
+            results[name] = {"exists": p.exists()}
+            if p.exists():
+                results[name]["size_mb"] = round(p.stat().st_size / (1024 * 1024), 2)
+
+        files_found = sum(1 for v in results.values() if v.get("exists"))
+        return {
+            "status": "success" if files_found else "empty",
+            "files_found": files_found,
+            "total_files_checked": len(results),
+            "summary_stats": summary_stats,
+            "results": results,
+        }
+
+    except Exception as e:
+        # Возвращаем 200 с ошибкой, чтобы UI не видел «Not Found»
+        return {"status": "error", "error": f"Ошибка анализа dataset: {str(e)}"}
+
 
 # ---------- Включаем доп. роуты (analytics) ----------
 app.include_router(analytics_router)
