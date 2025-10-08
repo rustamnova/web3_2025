@@ -831,3 +831,79 @@ document.addEventListener('DOMContentLoaded', function() {
     // Автоматически проверяем состояние сервиса при загрузке
     checkHealth();
 });
+
+// ========== АНАЛИТИКА ==========
+(function(){
+  async function getJSON(url, options = {}) {
+    const r = await fetch(url, options);
+    if (!r.ok) {
+      const t = await r.text().catch(()=> "");
+      throw new Error(`${r.status} ${r.statusText}${t ? " — " + t : ""}`);
+    }
+    return r.json();
+  }
+  function setText(id, val){ const el=document.getElementById(id); if(el) el.textContent=val; }
+  function showErr(msg){ const b=document.getElementById("analytics-error"); if(b){b.style.display="block"; b.textContent=msg;}}
+  function hideErr(){ const b=document.getElementById("analytics-error"); if(b){b.style.display="none"; b.textContent="";}}
+
+  function renderDatasetOverview(s){
+    s = s || {};
+    setText("ds-total", s.total_reviews ?? "–");
+    setText("ds-topics", s.total_topics ?? "–");
+    const range = s.date_range ? `${(s.date_range.start||"").slice(0,10)} — ${(s.date_range.end||"").slice(0,10)} (${s.date_range.months} мес.)` : "–";
+    setText("ds-range", range);
+    const sources = s.sources ? Object.entries(s.sources).map(([k,v])=>`${k}: ${v}`).join(", ") : "–";
+    setText("ds-sources", sources);
+    const sent = s.sentiment_distribution || {};
+    setText("ds-pos", sent.positive!=null ? `${(+sent.positive).toFixed(1)}%` : "–");
+    setText("ds-neu", sent.neutral !=null ? `${(+sent.neutral ).toFixed(1)}%` : "–");
+    setText("ds-neg", sent.negative!=null ? `${(+sent.negative).toFixed(1)}%` : "–");
+  }
+  function renderEventsTable(ch){
+    const tbody = document.querySelector("#events-table tbody"); if(!tbody) return;
+    tbody.innerHTML = "";
+    const rows = (ch && ch.data) ? ch.data : [];
+    rows.forEach(r=>{
+      const tr=document.createElement("tr");
+      let payload=""; try{ if(r.payload){ payload = JSON.stringify(JSON.parse(r.payload)); } }catch(e){ payload=String(r.payload); }
+      tr.innerHTML = `<td>${(r.timestamp||"").replace(" ","T")}</td><td>${r.user_id||""}</td><td>${r.event_type||""}</td><td style="max-width:420px;overflow:auto;">${payload||""}</td>`;
+      tbody.appendChild(tr);
+    });
+  }
+  function renderSummaryTable(ch){
+    const tbody=document.querySelector("#summary-table tbody"); const empty=document.getElementById("summary-empty");
+    if(!tbody) return; tbody.innerHTML="";
+    const rows=(ch&&ch.data)?ch.data:[];
+    if(!rows.length){ if(empty) empty.style.display="block"; return; }
+    if(empty) empty.style.display="none";
+    rows.forEach(r=>{
+      const tr=document.createElement("tr");
+      tr.innerHTML=`<td>${r.d||""}</td><td>${r.event_type||r.user_id||""}</td><td>${r.cnt||0}</td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  async function loadAnalytics(){
+    hideErr();
+    try { const ds = await getJSON("/analyze-dataset"); renderDatasetOverview(ds.summary_stats); }
+    catch(e){ showErr(`Ошибка анализа dataset: ${e.message}`); }
+    try { const stats = await getJSON("/analytics/stats?limit=20"); renderEventsTable(stats); }
+    catch(e){ showErr(`Ошибка загрузки событий: ${e.message}`); }
+    try { const sum = await getJSON("/analytics/summary?days=30&by=event_type&limit=200"); renderSummaryTable(sum); }
+    catch(e){ showErr(`Ошибка загрузки сводки: ${e.message}`); }
+  }
+
+  const origShowTab = window.showTab;
+  window.showTab = function(tabId){
+    if (typeof origShowTab === "function") origShowTab(tabId);
+    else {
+      document.querySelectorAll(".tab-content").forEach(el=>el.classList.remove("active"));
+      const v=document.getElementById(tabId); if(v) v.classList.add("active");
+    }
+    if (tabId === "analytics") loadAnalytics();
+  };
+  window.addEventListener("DOMContentLoaded", ()=>{
+    const active=document.querySelector(".tab-content.active");
+    if(active && active.id==="analytics") loadAnalytics();
+  });
+})();

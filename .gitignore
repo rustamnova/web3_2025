@@ -44,3 +44,8 @@ htmlcov/
 .github
 docker-compose.yml.bak
 docker-compose.yml.broken.*
+static/index.html.bak.2025-10-08_224314
+static/script.js.bak.2025-10-08_224314
+static/index.html.bak.2025-10-08_231457
+.gitignore
+static/script.js.bak.2025-10-08_231503
