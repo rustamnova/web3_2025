@@ -19,6 +19,7 @@ from .parser import parser
 
 
 app = FastAPI(title="Sentiment Topics API", version="1.0.0")
+from app.analytics import router as analytics_router
 
 app.add_middleware(
 	CORSMiddleware,
@@ -496,3 +497,4 @@ async def analyze_dataset():
         return {"error": f"Ошибка анализа dataset: {str(e)}"}
 
 
+app.include_router(analytics_router)
